@@ -8,6 +8,9 @@ Date : 04/12/2024
 # Sharing Various ESPHome Codes
 -------------------------------
 
+**Board**
+- ESP8266 - D1 MINI
+
 **Sensors**
 - AHT21
 - HTU21D

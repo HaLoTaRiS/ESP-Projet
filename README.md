@@ -1,21 +1,27 @@
-# ESP-Projet
-Sharing various ESPHOME codes
+# ESP-Project  
+Sharing various ESPHome codes  
 
-Autor : Baptiste F
-Date : 04/12/2024
+**Author**: Baptiste F  
+**Date**: 04/12/2024  
 
--------------------------------
-# Sharing Various ESPHome Codes
--------------------------------
+---
 
-**Board**
-- ESP8266 - D1 MINI
+## About This Project  
+This project focuses on ESPHome, seamlessly integrated with Home Assistant, to create efficient and customizable IoT devices. It includes configurations for boards, sensors, and displays, offering ready-to-use solutions for smart home automation.
 
-**Sensors**
-- AHT21
-- HTU21D
-- GY21P
+---
 
-**Screen**
-- SSD1306 OLED (128x64)
-- LCD1602 
+## Devices and Components  
+
+### **Board**  
+- **ESP8266 - D1 Mini**  
+  Configuration file: `esp8266-board-D1-mini.yaml`  
+
+### **Sensors**  
+- **AHT21** - Temperature and humidity sensor  
+- **HTU21D** - Temperature and humidity sensor  
+- **GY21P** - High-accuracy temperature and humidity sensor  
+
+### **Screens**  
+- **SSD1306 OLED (128x64)** - Dual-color display supported  
+- **LCD1602** - I2C-compatible classic display

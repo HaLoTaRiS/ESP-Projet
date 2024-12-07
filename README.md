@@ -15,7 +15,9 @@ This project focuses on ESPHome, seamlessly integrated with Home Assistant, to c
 
 ### **Board**  
 - **ESP8266 - D1 Mini**  
-  Configuration file: `esp8266-board-D1-mini.yaml`  
+  Configuration file: `esp8266-board-D1-mini.yaml`
+- **ESP32-S3**  
+  Configuration file: `board-esp32-s3.yaml`  
 
 ### **Sensors**  
 - **AHT21** - Temperature and humidity sensor  

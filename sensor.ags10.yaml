@@ -1,0 +1,91 @@
+# ==============================================================================
+# ESPHome Configuration for AGS10 Sensor
+# Author: Baptiste F
+# Date: 2024-12-08
+# Version: 1.0
+# Description: Default configuration for AGS10 Sensor (COV)
+#       The AGS10 sensor is designed to detect combustible gases such as methane, 
+#           propane, and hydrocarbon vapors
+#       This example demonstrates the use of an ESP8266 development board.
+# ==============================================================================
+
+substitutions:
+  name: sensor-ags10          # Technical name of the device
+  friendly_name: AGS10 Sensor # Friendly name displayed in the user interface
+
+esphome:
+  name: ${name}                         # Use the substitution for the technical name
+  friendly_name: ${friendly_name}       # Use the substitution for the friendly name
+  # Basic ESPHome configuration with a unique device name.
+  # The name is used to identify the device in Home Assistant.
+
+# Specify the board model (e.g., D1 Mini). Update this line to match the type of board you are using.
+esp8266:
+  board: d1_mini
+
+# Enable logging for debugging and data inspection
+logger:
+  level: DEBUG                          # Logging level set to DEBUG for detailed information
+
+# Enable Home Assistant integration via the API
+api:
+  encryption:
+    key: "your-encryption-key"          # Add an encryption key to secure communication with Home Assistant
+
+# Enable over-the-air (OTA) updates to flash firmware without a physical connection
+ota:
+  - platform: esphome
+    password: "yourpassword"
+
+# Wi-Fi configuration
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  # Store sensitive information (e.g., WiFi SSID and password) in `secrets.yaml`.
+
+  # Enable a fallback hotspot (access point) if WiFi connection fails.
+  ap:
+    ssid: "Fallback-ags10-sensor"      # Fallback Wi-Fi access point name
+    password: "fallbackpassword"        # Fallback access point password
+
+# Enable a captive portal for easier connection to the fallback hotspot.
+captive_portal:
+
+# Enable a web server for monitoring and control via a browser.
+web_server:
+  port: 80                              # Default port for the web server
+
+# Configuration of the onboard LED connected to GPIO2 (specific to the ESP8266 board) to blink during AGS10 data acquisition.
+output:
+  - platform: gpio
+    pin: GPIO2
+    id: led_indicator
+    inverted: true  
+    # Invert the state of the output (active-low LED)
+
+# I2C bus configuration
+i2c:
+  sda: GPIO4  # SDA pin for I2C communication (example for ESP8266 D1 Mini, adjust according to your board)
+  scl: GPIO5  # SCL pin for I2C communication (example for ESP8266 D1 Mini, adjust according to your board)
+  scan: true  # Enable scanning to detect connected I2C devices
+  frequency: 15000.0  # Frequency for the HTU21D sensor
+
+sensor:
+  - platform: ags10
+    tvoc:
+      name: "TVOC"                            # Total Volatile Organic Compounds (TVOC) sensor
+      unit_of_measurement: "ppm"              # Measurement unit for TVOC
+      accuracy_decimals: 2                    # Decimal precision
+      on_value:
+        then:
+          # Blink the LED once when humidity data is acquired
+          - output.turn_on: led_indicator
+          - delay: 200ms
+          - output.turn_off: led_indicator
+    address: 0x1A                           # I2C address of the AGS10 sensor
+    update_interval: 10s                     # Data acquisition interval
+    id: ags10_sensor_tcov                    # Sensor identifier
+    
+# Description:
+# 1. **set_zero_point**: Recalibrate the sensor's zero-point. Modes: FACTORY_DEFAULT, CURRENT_VALUE, CUSTOM_VALUE.
+# 2. **new_i2c_address**: Change the sensor's I2C address for using multiple sensors on the same bus.

@@ -1,0 +1,123 @@
+# ==============================================================================
+# ESPHome Configuration for Real-time PCF8563 Module
+# Author: Baptiste F
+# Date: 2024-12-08
+# Version: 1.0
+# Description: Default configuration for Real-time PCF8563 working I2C
+#       This example demonstrates the use of an ESP8266 development board.
+# ==============================================================================
+
+substitutions:
+  name: module-pcf8563         	        # Technical name of the device
+  friendly_name: Real-time PCF8563 I2C 	# Friendly name displayed in the user interface
+
+esphome:
+  name: ${name}                         # Use the substitution for the technical name
+  friendly_name: ${friendly_name}       # Use the substitution for the friendly name
+  # Basic ESPHome configuration with a unique device name.
+  # The name is used to identify the device in Home Assistant.
+  on_boot:
+    then:
+      # read the RTC time once when the system boots
+      - pcf8563.read_time:
+      - logger.log: "PCF8563 : The initial time has been set."
+
+# Specify the board model (e.g., D1 Mini). Update this line to match the type of board you are using.
+esp8266:
+  board: d1_mini
+
+# Enable logging for debugging and data inspection
+logger:
+  level: DEBUG                          # Logging level set to DEBUG for detailed information
+
+# Enable Home Assistant integration via the API
+api:
+  encryption:
+    key: "your-encryption-key"          # Add an encryption key to secure communication with Home Assistant
+
+# Enable over-the-air (OTA) updates to flash firmware without a physical connection
+ota:
+  - platform: esphome
+    password: "yourpassword"
+
+# Wi-Fi configuration
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  # Store sensitive information (e.g., WiFi SSID and password) in `secrets.yaml`.
+
+  # Enable a fallback hotspot (access point) if WiFi connection fails.
+  ap:
+    ssid: "Fallback-real-time-pcf8563"      	# Fallback Wi-Fi access point name
+    password: "fallbackpassword"              # Fallback access point password
+
+# Enable a captive portal for easier connection to the fallback hotspot.
+captive_portal:
+
+# Enable a web server for monitoring and control via a browser.
+web_server:
+  port: 80                                    # Default port for the web server
+
+# Configuration of the onboard LED connected to GPIO2 (specific to the ESP8266 board) to blink during PCF8563 data acquisition.
+output:
+  - platform: gpio
+    pin: GPIO2
+    id: led_indicator
+    inverted: true  
+    # Invert the state of the output (active-low LED)
+
+# I2C bus configuration
+i2c:
+  sda: GPIO4  			  # SDA pin for I2C communication (example for ESP8266 D1 Mini, adjust according to your board)
+  scl: GPIO5  			  # SCL pin for I2C communication (example for ESP8266 D1 Mini, adjust according to your board)
+  scan: true  			  # Enable scanning to detect connected I2C devices
+  frequency: 10kHz    # Frequency for the real-time pcf8563 
+
+time:
+  # Configure the PCF8563 real-time clock module
+  - platform: pcf8563
+    id: horloge_rtc                 # Unique ID for the PCF8563 time platform
+    timezone: Europe/Paris          # Set the timezone for the RTC module
+    address: 0x51                   # I2C address of the PCF8563 module
+    update_interval: 60s            # Update time from RTC every 60 seconds
+    on_time_sync:
+      # Actions to perform when the time is successfully synchronized with the RTC
+      then:
+        - logger.log: "PCF8563: Time has been synchronized!"
+        # Blink the LED to indicate a successful synchronization only for ESP 8266
+        - output.turn_on: led_indicator
+        - delay: 200ms
+        - output.turn_off: led_indicator
+
+  # Configure time synchronization with Home Assistant
+  - platform: homeassistant
+    id: home_assistant_time         # Unique ID for the Home Assistant time platform
+    on_time_sync:
+      # Actions to perform when the time is successfully synchronized with Home Assistant
+      then:
+        - pcf8563.write_time:       # Write the synchronized time to the PCF8563 RTC module
+        - logger.log: "PCF8563: Time has been synchronized with Home Assistant!"
+        # Log the synchronized time using a custom lambda
+        - lambda: |-
+            auto time = id(home_assistant_time).now();
+            ESP_LOGD("custom", "Home Assistant Time: %02d:%02d:%02d", 
+                     time.hour, time.minute, time.second);
+
+# Define a template text to display the date and time
+text_sensor:
+  - platform: template
+    # Display name for the text sensor
+    name: "Date and Time"
+    update_interval: 10s  # Refresh the value every 10 seconds           
+    lambda: |-
+      char str[32];
+      auto time = id(horloge_rtc).now();  
+      if (time.is_valid()) {  
+        sprintf(str, "%02d/%02d/%04d %02d:%02d:%02d", 
+                time.day_of_month, time.month, time.year, 
+                time.hour, time.minute, time.second);
+        return {str};               
+      } else {
+        ESP_LOGD("custom", "PCF8563: Invalid time");
+        return {"Invalid time"};    
+      }

@@ -1,0 +1,93 @@
+# ==============================================================================
+# ESPHome Configuration for HTU21D Sensor
+# Author: Baptiste F
+# Date: 2024-12-08
+# Version: 1.0
+# Description: Default configuration for HTU21D Sensor (temperature and humidity)
+#       This example demonstrates the use of an ESP8266 development board.
+# ==============================================================================
+
+substitutions:
+  name: sensor-htu21d          # Technical name of the device
+  friendly_name: HTU21D Sensor # Friendly name displayed in the user interface
+
+esphome:
+  name: ${name}                         # Use the substitution for the technical name
+  friendly_name: ${friendly_name}       # Use the substitution for the friendly name
+  # Basic ESPHome configuration with a unique device name.
+  # The name is used to identify the device in Home Assistant.
+
+# Specify the board model (e.g., D1 Mini). Update this line to match the type of board you are using.
+esp8266:
+  board: d1_mini
+
+# Enable logging for debugging and data inspection
+logger:
+  level: DEBUG                          # Logging level set to DEBUG for detailed information
+
+# Enable Home Assistant integration via the API
+api:
+  encryption:
+    key: "your-encryption-key"          # Add an encryption key to secure communication with Home Assistant
+
+# Enable over-the-air (OTA) updates to flash firmware without a physical connection
+ota:
+  - platform: esphome
+    password: "yourpassword"
+
+# Wi-Fi configuration
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  # Store sensitive information (e.g., WiFi SSID and password) in `secrets.yaml`.
+
+  # Enable a fallback hotspot (access point) if WiFi connection fails.
+  ap:
+    ssid: "Fallback-htu21d-sensor"      # Fallback Wi-Fi access point name
+    password: "fallbackpassword"        # Fallback access point password
+
+# Enable a captive portal for easier connection to the fallback hotspot.
+captive_portal:
+
+# Enable a web server for monitoring and control via a browser.
+web_server:
+  port: 80                              # Default port for the web server
+
+# Configuration of the onboard LED connected to GPIO2 (specific to the ESP8266 board) to blink during HTU21D data acquisition.
+output:
+  - platform: gpio
+    pin: GPIO2
+    id: led_indicator
+    inverted: true  # Invert the state of the output (active-low LED)
+
+# I2C bus configuration
+i2c:
+  sda: GPIO4  # SDA pin for I2C communication (example for ESP8266 D1 Mini, adjust according to your board)
+  scl: GPIO5  # SCL pin for I2C communication (example for ESP8266 D1 Mini, adjust according to your board)
+  scan: true  # Enable scanning to detect connected I2C devices
+  frequency: 15000.0  # Frequency for the HTU21D sensor
+
+# HTU21D sensor configuration
+sensor:
+  - platform: htu21d  # Sensor type (HTU21D for temperature and humidity)
+    temperature:
+      name: "Temperature"  # Name of the temperature sensor in the interface
+      id: htu21d_sensor_temperature  # Unique ID for the temperature sensor
+      accuracy_decimals: 1  # Number of decimal places for precision
+      on_value:
+        then:
+          # Blink the LED once when temperature data is acquired
+          - output.turn_on: led_indicator
+          - delay: 200ms
+          - output.turn_off: led_indicator
+    humidity:
+      name: "Humidity"  # Name of the humidity sensor in the interface
+      id: htu21d_sensor_humidity  # Unique ID for the humidity sensor
+      accuracy_decimals: 1  # Number of decimal places for precision
+      on_value:
+        then:
+          # Blink the LED once when humidity data is acquired
+          - output.turn_on: led_indicator
+          - delay: 200ms
+          - output.turn_off: led_indicator
+    update_interval: 10s  # Data acquisition frequency (every 10 seconds)

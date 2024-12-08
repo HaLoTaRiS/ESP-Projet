@@ -1,0 +1,132 @@
+# ==============================================================================
+# ESPHome Configuration for BME280 Sensor
+# Author: Baptiste F
+# Date: 2024-12-08
+# Version: 1.0
+# Description: Default configuration for bme280 Sensor (temperature, humidity 
+#			and pressure working I2C)
+#       This example demonstrates the use of an ESP8266 development board.
+# ==============================================================================
+
+substitutions:
+  name: sensor-bme280          	# Technical name of the device
+  friendly_name: BME280 Sensor 	# Friendly name displayed in the user interface
+
+esphome:
+  name: ${name}                         # Use the substitution for the technical name
+  friendly_name: ${friendly_name}       # Use the substitution for the friendly name
+  # Basic ESPHome configuration with a unique device name.
+  # The name is used to identify the device in Home Assistant.
+
+# Specify the board model (e.g., D1 Mini). Update this line to match the type of board you are using.
+esp8266:
+  board: d1_mini
+
+# Enable logging for debugging and data inspection
+logger:
+  level: DEBUG                          # Logging level set to DEBUG for detailed information
+
+# Enable Home Assistant integration via the API
+api:
+  encryption:
+    key: "your-encryption-key"          # Add an encryption key to secure communication with Home Assistant
+
+# Enable over-the-air (OTA) updates to flash firmware without a physical connection
+ota:
+  - platform: esphome
+    password: "yourpassword"
+
+# Wi-Fi configuration
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  # Store sensitive information (e.g., WiFi SSID and password) in `secrets.yaml`.
+
+  # Enable a fallback hotspot (access point) if WiFi connection fails.
+  ap:
+    ssid: "Fallback-Bme280-sensor"      	# Fallback Wi-Fi access point name
+    password: "fallbackpassword"        # Fallback access point password
+
+# Enable a captive portal for easier connection to the fallback hotspot.
+captive_portal:
+
+# Enable a web server for monitoring and control via a browser.
+web_server:
+  port: 80                              # Default port for the web server
+
+# Configuration of the onboard LED connected to GPIO2 (specific to the ESP8266 board) to blink during BME280 data acquisition.
+output:
+  - platform: gpio
+    pin: GPIO2
+    id: led_indicator
+    inverted: true  
+    # Invert the state of the output (active-low LED)
+
+# I2C bus configuration
+i2c:
+  sda: GPIO4  			# SDA pin for I2C communication (example for ESP8266 D1 Mini, adjust according to your board)
+  scl: GPIO5  			# SCL pin for I2C communication (example for ESP8266 D1 Mini, adjust according to your board)
+  scan: true  			# Enable scanning to detect connected I2C devices
+  frequency: 15000.0  	# Frequency for the HTU21D sensor
+
+sensor:
+  # BME280 I2C sensor configuration
+  - platform: bme280_i2c
+    # Temperature sensor
+    temperature:
+      name: "Temperature"                   # The name displayed for the temperature sensor
+      id: bme280_temperature                # Unique identifier for the temperature sensor
+      oversampling: 16x                     # Sets the oversampling rate for more accurate readings
+      on_value:
+        then:
+          # Blink the LED once when temperature data is acquired
+          - output.turn_on: led_indicator   # Turn on the LED indicator
+          - delay: 200ms                    # Wait for 200ms
+          - output.turn_off: led_indicator  # Turn off the LED indicator
+
+    # Pressure sensor
+    pressure:
+      name: "Pression"                      # The name displayed for the pressure sensor
+      id: bme280_pressure                   # Unique identifier for the pressure sensor
+      on_value:
+        then:
+          # Blink the LED once when pressure data is acquired
+          - output.turn_on: led_indicator   # Turn on the LED indicator
+          - delay: 200ms                    # Wait for 200ms
+          - output.turn_off: led_indicator  # Turn off the LED indicator
+
+    # Humidity sensor
+    humidity:
+      name: "Humidity"                      # The name displayed for the humidity sensor
+      id: bme280_humidity                   # Unique identifier for the humidity sensor
+
+    address: 0x76                           # The I2C address of the BME280 sensor
+    update_interval: 10s                    # Update the sensor data every 10 seconds
+
+  # Template sensor for calculating altitude based on pressure
+  - platform: template
+    name: "Altitude"  
+    # Formula for altitude based on pressure
+    lambda: |-
+      const float STANDARD_SEA_LEVEL_PRESSURE = 1013.25;  
+      return ((id(bme280_temperature).state + 273.15) / 0.0065) *  
+        (powf((STANDARD_SEA_LEVEL_PRESSURE / id(bme280_pressure).state), 0.190234) - 1);  
+    update_interval: 15s                # Update the altitude every 15 seconds
+    icon: 'mdi:signal'                  # Icon for the altitude sensor
+    unit_of_measurement: 'm'            # Unit of measurement (meters)
+
+  # Absolute humidity calculation based on temperature and humidity
+  - platform: absolute_humidity
+    name: "Absolute Humidity"           # The name displayed for the absolute humidity sensor
+    temperature: bme280_temperature     # Reference to the temperature sensor
+    humidity: bme280_humidity           # Reference to the humidity sensor
+
+  # Template sensor for calculating Dew Point based on temperature and humidity
+  - platform: template
+    name: "Dew Point"                   # The name displayed for the dew point sensor
+    lambda: |-
+      return (243.5*(log(id(bme280_humidity).state/100)+((17.67*id(bme280_temperature).state)/
+      (243.5+id(bme280_temperature).state)))/(17.67-log(id(bme280_humidity).state/100)-
+      ((17.67*id(bme280_temperature).state)/(243.5+id(bme280_temperature).state))));  
+    unit_of_measurement: '°C'           # Unit of measurement (Celsius)
+    icon: 'mdi:thermometer-alert'       # Icon for the dew point sensor

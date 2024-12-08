@@ -1,0 +1,99 @@
+# ==============================================================================
+# ESPHome Configuration for screen LCD1602 With PCF8574
+# Author: Baptiste F
+# Date: 2024-12-08
+# Version: 1.0
+# Description: Default configuration for screen LCD1602
+#       This example demonstrates the use of an ESP8266 development board.
+# ==============================================================================
+
+substitutions:
+  name: screen-lcd1602      	            # Technical name of the device
+  friendly_name: Screen LCD1602 I2C     	# Friendly name displayed in the user interface
+
+esphome:
+  name: ${name}                         # Use the substitution for the technical name
+  friendly_name: ${friendly_name}       # Use the substitution for the friendly name
+  # Basic ESPHome configuration with a unique device name.
+  # The name is used to identify the device in Home Assistant.
+
+# Specify the board model (e.g., D1 Mini). Update this line to match the type of board you are using.
+esp8266:
+  board: d1_mini
+
+# Enable logging for debugging and data inspection
+logger:
+  level: DEBUG                          # Logging level set to DEBUG for detailed information
+
+# Enable Home Assistant integration via the API
+api:
+  encryption:
+    key: "your-encryption-key"         # Add an encryption key to secure communication with Home Assistant
+
+# Enable over-the-air (OTA) updates to flash firmware without a physical connection
+ota:
+  - platform: esphome
+    password: "yourpassword"
+
+# Wi-Fi configuration
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  # Store sensitive information (e.g., WiFi SSID and password) in `secrets.yaml`.
+
+  # Enable a fallback hotspot (access point) if WiFi connection fails.
+  ap:
+    ssid: "Fallback-Screen-LCD1602"     # Fallback Wi-Fi access point name
+    password: "fallbackpassword"        # Fallback access point password
+
+# Enable a captive portal for easier connection to the fallback hotspot.
+captive_portal:
+
+# Enable a web server for monitoring and control via a browser.
+web_server:
+  port: 80                              # Default port for the web server
+
+# Configuration of the onboard LED connected to GPIO2 (specific to the ESP8266 board) to blink during SSD1306 data.
+output:
+  - platform: gpio
+    pin: GPIO2
+    id: led_indicator
+    inverted: true  
+    # Invert the state of the output (active-low LED)
+
+# I2C bus configuration
+i2c:
+  sda: GPIO4  			  # SDA pin for I2C communication (example for ESP8266 D1 Mini, adjust according to your board)
+  scl: GPIO5  			  # SCL pin for I2C communication (example for ESP8266 D1 Mini, adjust according to your board)
+  scan: true  			  # Enable scanning to detect connected I2C devices
+  frequency: 10kHz    # Frequency for the screen LCD1602
+
+# Configuration of the LCD1602 display over I2C
+display:
+  - platform: lcd_pcf8574
+    dimensions: 16x2            # LCD1602 has 16 columns and 2 rows
+    address: 0x3F               # I2C address of the LCD1602 (adjust if different)
+    lambda: |-
+      // Center the static text "LCD1602 I2C" on the first line
+      std::string line1 = "   LCD1602 I2C   ";                // 16-character string (padded for centering)
+      it.print(0, 0, line1.c_str());
+
+      // Scroll the text "Hello World !!!" on the second line
+      static int scroll_pos = 0;
+      static std::string message = "                Hello World !!!";   // Add spaces for smooth scrolling
+      scroll_pos++;
+      if (scroll_pos >= message.length()) {
+        scroll_pos = 0;
+      }
+      // Display a portion of the scrolling message on the second line
+      it.print(0, 1, message.substr(scroll_pos, 16).c_str());
+      
+      // Toggle the LED state to blink during scrolling
+      static bool led_state = false;
+      led_state = !led_state;  // Invert the LED state
+      if (led_state) {
+        id(led_indicator).turn_on();
+      } else {
+        id(led_indicator).turn_off();
+      }
+    update_interval: 800ms  # Scrolling speed (adjust as needed)

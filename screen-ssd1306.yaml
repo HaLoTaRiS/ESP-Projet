@@ -1,0 +1,110 @@
+# ==============================================================================
+# ESPHome Configuration for screen OLED SSD1306 128x64
+# Author: Baptiste F
+# Date: 2024-12-08
+# Version: 1.0
+# Description: Default configuration for screen OLED SSD1306 working I2C
+#       The screen size is 128x64 pixels
+#       This example demonstrates the use of an ESP8266 development board.
+# ==============================================================================
+
+substitutions:
+  name: screen-ssd1306       	            # Technical name of the device
+  friendly_name: Screen SSD1306 OLED I2C 	# Friendly name displayed in the user interface
+
+esphome:
+  name: ${name}                         # Use the substitution for the technical name
+  friendly_name: ${friendly_name}       # Use the substitution for the friendly name
+  # Basic ESPHome configuration with a unique device name.
+  # The name is used to identify the device in Home Assistant.
+
+# Specify the board model (e.g., D1 Mini). Update this line to match the type of board you are using.
+esp8266:
+  board: d1_mini
+
+# Enable logging for debugging and data inspection
+logger:
+  level: DEBUG                          # Logging level set to DEBUG for detailed information
+
+# Enable Home Assistant integration via the API
+api:
+  encryption:
+    key: "your-encryption-key"          # Add an encryption key to secure communication with Home Assistant
+
+# Enable over-the-air (OTA) updates to flash firmware without a physical connection
+ota:
+  - platform: esphome
+    password: "yourpassword"
+
+# Wi-Fi configuration
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  # Store sensitive information (e.g., WiFi SSID and password) in `secrets.yaml`.
+
+  # Enable a fallback hotspot (access point) if WiFi connection fails.
+  ap:
+    ssid: "Fallback-Screen-SSD1306"      	# Fallback Wi-Fi access point name
+    password: "fallbackpassword"              # Fallback access point password
+
+# Enable a captive portal for easier connection to the fallback hotspot.
+captive_portal:
+
+# Enable a web server for monitoring and control via a browser.
+web_server:
+  port: 80                                    # Default port for the web server
+
+# Configuration of the onboard LED connected to GPIO2 (specific to the ESP8266 board) to blink during SSD1306 data.
+output:
+  - platform: gpio
+    pin: GPIO2
+    id: led_indicator
+    inverted: true  
+    # Invert the state of the output (active-low LED)
+
+# I2C bus configuration
+i2c:
+  sda: GPIO4  			  # SDA pin for I2C communication (example for ESP8266 D1 Mini, adjust according to your board)
+  scl: GPIO5  			  # SCL pin for I2C communication (example for ESP8266 D1 Mini, adjust according to your board)
+  scan: true  			  # Enable scanning to detect connected I2C devices
+  frequency: 400kHz   # Frequency for the screen SSD1306 OLED
+
+# Copy the Arial font to your configuration directory.
+font:
+  - file: "fonts/arial.ttf"
+    id: font_title
+    size: 12
+    # Defines the font for the title with size 12.
+  - file: "fonts/arial.ttf"
+    id: font_text
+    size: 20
+    # Defines the font for the scrolling text with size 20.
+
+display:
+  # Configuration for the 128x64 OLED SSD1306 screen.
+  - platform: ssd1306_i2c     # Specify the platform used for the OLED display, which is SSD1306 over I2C communication.
+    model: "SSD1306 128x64"   # Define the model of the OLED display, which is 128x64 pixels.
+    address: 0x3C             # Set the I2C address of the OLED display (0x3C is a common address for these displays).
+    update_interval: 100ms    # Set the interval for screen updates to 100 milliseconds, controlling how often the display refreshes.
+    lambda: |-
+      // Average character width in pixels for your font
+      const int avg_char_width = 6;                       // Adjust according to your actual font
+
+      // Display the title text centered on the first line.
+      const char* title = "Example SSD1306";
+      int title_width = strlen(title) * avg_char_width;     // Calculate the width of the title text
+      int center_x = (128 - title_width) / 2;               // Calculate the horizontal position to center the text
+      it.printf(center_x, 0, id(font_title), "%s", title);  // Print the title at the calculated position
+
+      // Scrolling text
+      static int scroll_x_position = 128;                   // Initialize the starting position for scrolling text
+      it.print(scroll_x_position, 30, id(font_text), "Hello World !!!");  // Print the scrolling text
+
+      // Move the position of the text to the left.
+      scroll_x_position -= 2;
+
+      // Reset the position once the text moves off the screen.
+      int scroll_text_width = strlen("Hello World !!!") * avg_char_width; 
+      if (scroll_x_position < -scroll_text_width) {
+        scroll_x_position = 128;                            // Reset position to start scrolling from the right again
+      }

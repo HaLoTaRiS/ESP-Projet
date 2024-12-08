@@ -20,10 +20,22 @@ This project focuses on ESPHome, seamlessly integrated with Home Assistant, to c
   Configuration file: `board-esp32-s3.yaml`  
 
 ### **Sensors**  
-- **AHT21** - Temperature and humidity sensor  
-- **HTU21D** - Temperature and humidity sensor  
-- **GY21P** - High-accuracy temperature and humidity sensor  
+- **HTU21D** - Temperature and humidity sensor
+  Configuration file: `sensor-htu21d.yaml`
+- **AGS10** - TVOC sensor
+  Configuration file: `sensor-ags10.yaml`
+- **BME280** - Temperature, humidity and pressure sensor
+  Configuration file: `sensor-bme280.yaml`
+- **ENS160 & AHT21** - Temperature and humidity sensor
+  Configuration file: `soon`
+- **GY21P** - High-accuracy temperature and humidity sensor
+  Configuration file: `soon`
 
 ### **Screens**  
-- **SSD1306 OLED (128x64)** - Dual-color display supported  
+- **SSD1306 OLED (128x64)** - Dual-color display supported
+  Configuration file: `screen-ssd1306.yaml`
 - **LCD1602** - I2C-compatible classic display
+
+### **Module**  
+- **Real-Time PCF8563** - Dual-color display supported
+  Configuration file: `module-pcf8563.yaml`

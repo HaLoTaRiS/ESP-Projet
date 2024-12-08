@@ -64,10 +64,10 @@ output:
 
 # I2C bus configuration
 i2c:
-  sda: GPIO4  			# SDA pin for I2C communication (example for ESP8266 D1 Mini, adjust according to your board)
-  scl: GPIO5  			# SCL pin for I2C communication (example for ESP8266 D1 Mini, adjust according to your board)
-  scan: true  			# Enable scanning to detect connected I2C devices
-  frequency: 15000.0  	# Frequency for the HTU21D sensor
+  sda: GPIO4  			    # SDA pin for I2C communication (example for ESP8266 D1 Mini, adjust according to your board)
+  scl: GPIO5  			    # SCL pin for I2C communication (example for ESP8266 D1 Mini, adjust according to your board)
+  scan: true  			    # Enable scanning to detect connected I2C devices
+  frequency: 15000.0  	# Frequency for the BME280 sensor
 
 sensor:
   # BME280 I2C sensor configuration

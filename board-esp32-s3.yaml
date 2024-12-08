@@ -2,7 +2,7 @@
 # ESPHome Configuration for ESP32-S3 Development Board
 # Author: Baptiste F
 # Date: 2024-12-07
-# Version: 1.0
+# Version: 1.1
 # Description: Default configuration for ESP32-S3 DevKitC-1 board
 #              with logging, WiFi, API, OTA, and Web Server enabled.
 # ==============================================================================
@@ -33,7 +33,7 @@ api:
 # Enable OTA updates to flash the firmware without a USB cable.
 ota:
   - platform: esphome
-    password: ""your-password"
+    password: "your-password"
   # Use a strong password to prevent unauthorized updates.
 
 wifi:
@@ -44,7 +44,7 @@ wifi:
   # Enable a fallback hotspot (access point) if WiFi connection fails.
   ap:
     ssid: "Board-Esp32-S3 Fallback Hotspot"
-    password: "w1jguBHtjxSf"
+    password: "fallbackpassword"
   # The fallback hotspot allows direct connection to the device for reconfiguration.
 
 # Enable a captive portal for easier connection to the fallback hotspot.

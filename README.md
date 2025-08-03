@@ -25,7 +25,9 @@ This project focuses on ESPHome, seamlessly integrated with Home Assistant, to c
 - **AGS10** - TVOC sensor  
   Configuration file: `sensor-ags10.yaml`  
 - **BME280** - Temperature, humidity and pressure sensor  
-  Configuration file: `sensor-bme280.yaml`  
+  Configuration file: `sensor-bme280.yaml`
+- **YL-83** - Rain sensor  
+  Configuration file: `module-YL-83.yaml`  
 - **ENS160 & AHT21** - Temperature and humidity sensor  
   Configuration file: `soon`  
 - **GY21P** - High-accuracy temperature and humidity sensor  
